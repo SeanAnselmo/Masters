@@ -1,0 +1,6 @@
+RecipeName,PreparationTime,Ingredients,ComponentOf
+Chicken Stew,30 minutes,"Chicken thighs, Potatoes, Thyme, Black pepper, Parsley, Chicken broth",None
+Homemade Chicken Broth,2 hours,"Chicken bones, Onion, Carrots, Celery, Garlic, Water, Salt, Black pepper",Chicken Stew
+Garlic Bread,10 minutes,"Bread, Garlic, Butter",Chicken Stew
+Beef Chili,20 minutes,"Ground beef, Kidney beans, Diced tomatoes, Onion, Garlic, Chili powder, Cumin, Salt, Black pepper",None
+Vegetable Stir-Fry,10 minutes,"Mixed vegetables, Vegetable oil, Garlic, Soy sauce, Sesame oil, Honey",None
