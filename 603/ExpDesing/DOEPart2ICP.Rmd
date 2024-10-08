@@ -1,0 +1,96 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-11-27"
+---
+---
+title: 'Data603: Statistical Modelling with Data'
+output:
+  html_document:
+    df_print: paged
+---
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 18px;
+      line-height: 2em;
+  }
+td {  /* Table  */
+  font-size: 12px;
+}
+.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+ p {line-height: 2em;}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: Teal;
+}
+h3 { /* Header 3 */
+  font-size: 22px;
+  color: Green;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+&copy; Danika Lipman 2023, based on content created by Thuntida Ngamkham
+
+# **EXPERIMENTAL DESIGN PART 2 In Class Problems**
+
+```{r}
+library(lmtest)
+
+```
+
+------------------------------------------------------------------
+
+### **Inclass Practice Problem 33**
+
+From the MVPC experiment, check Model Adequacy (Normality Assumption, Constant Variance Assumption, Independent error term Assumption )
+
+```{r}
+MVPC=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/MVPC.csv", header=TRUE)
+library(lmtest)
+```
+
+```{r}
+CRD=aov(Score~Treatment, data=MVPC) #Perform ANOVA for CRD
+summary(CRD)
+
+par(mfrow=c(2,2))
+plot(CRD)
+
+bartlett.test(Score~Treatment, data=MVPC)
+shapiro.test(residuals(CRD))
+bptest(CRD)
+```
+
+------------------------------------------------------------------
+
+### **Inclass Practice Problem 34**
+
+From the lifetime of AA battery experiment, check Model Adequacy (Normaillty Assumption, Constant Variance Assumption, Independent error term Assumption)
+
+```{r}
+LifetimeData = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/lifetime.csv")
+```
+
+```{r}
+CRD=aov(hrs~device, data=LifetimeData) #Perform ANOVA for CRD
+summary(CRD)
+```
+
+------------------------------------------------------------------
+
+
+

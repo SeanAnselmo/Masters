@@ -1,0 +1,501 @@
+---
+title: "Multiple Linear Regression"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+## ASSIGNMENT 3: Multiple Linear Regression
+
+## Model Assumptions and Completely Randomized Designs (CRD)
+
+*Deadline:April 7th , 2024, by 11:59 pm. Submit to Gradescope.ca*
+
+&copy; Thuntida Ngamkham 2022 Modified by Danika Lipman
+
+
+**Problem 1**: 
+
+__From Assignment 1 Problem 1__, The amount of water used by the production facilities of a plant varies. Observations on water usage and other,possibility related,variables were collected for 249 months. The data is given in __water.csv file__ The explanatory variables are
+
+TEMP= average monthly temperature(degree celsius)
+sz
+PROD=amount of production(10cubic)
+
+DAYS=number of operationing day in the month
+
+HOUR=number of hours shut down for maintenance
+
+The response variable is USAGE=monthly water usage(gallons/minute)
+
+
+```{r}
+waterdata = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/water.csv")
+library(GGally)
+library(mctest)
+library(lmtest)
+```
+
+```{r}
+model=lm(USAGE~PROD+TEMP+HOUR+DAYS, data=waterdata)
+summary(model)
+intermodel=lm(USAGE~(PROD+TEMP+HOUR)^2, data=waterdata)
+summary(intermodel)
+finalintermodel=lm(USAGE~PROD+TEMP+HOUR+PROD*TEMP+PROD*HOUR, data=waterdata)
+summary(finalintermodel)
+```
+
+
+From the outputs above, the best-fit model is 
+
+$$
+\begin{aligned}
+\hat{USAGE}=\hat\beta_0PROD+\hat\beta_1TEMP+\hat\beta_2HOUR+\hat\beta_3PROD*TEMP+\hat\beta_4PROD*HOUR
+\end{aligned}
+$$
+Answer the following questions
+
+(a)  Many researchers avoid the problems of multicollinearity by always omitting all but one of the ''redundant'' variables from the model. By checking all pairwise combinations of predictors in scatterplots and using the VIF function, do you detect any high correlation (r>0.8) between predictors? Does there appear to be any problem with multicollinearity assumption? 
+
+```{r}
+pairs(~USAGE+PROD+TEMP+HOUR+PROD*TEMP+PROD*HOUR, data=waterdata)
+
+vif(model)
+```
+**Answer to Q1a** 
+
+Our scatter plot of the combinations yielded no combinations with r>0.8.The VIF function agrees with this, showing no predictors over 2.0, suggesting there is no correlation between these predictors.
+
+(b) Conduct a test for heteroscedasticity (non constant variance) and plot a residual plot. Does there appear to be any problem with homoscedasticity assumption? 
+
+```{r}
+plot(finalintermodel, which=1)
+plot(finalintermodel, which=3)
+bptest(finalintermodel)
+```
+
+Note: make sure you use the model provided above for your analysis, and provide the correct null and alternative hypothesis, and p-value.
+
+**Answer to Q1b** 
+
+The plot shows our residuals do not form a funnel shape. The scale location plot appears to be horizontal, with a slight curve on the left end. These findings suggests our model has equal variance. We can use a test to provide a more formal answer.
+
+The Breusch-Pagan test is a mathematical way of detecting heteroscedasticity. The null hypothesis for our BP test is:
+
+$H_0:$ Heteroscedasticity is not present
+$H_a:$ Heteroscedasticity is present
+
+The p value for our BP test for our model is: p value = 0.8484, meaning we fail to reject the null hypothesis and can conclude heteroscedasticity is not present.
+
+(c) Provide a histogram for residuals, a normal Q-Q plot, and the Shapiro -Wilk test. Does there appear to be any problem with normality assumption? Be sure to state the hypotheses and report the p-value. 
+
+```{r}
+hist(residuals(finalintermodel),main="Hist",breaks=20)
+ggplot(waterdata, aes(sample=finalintermodel$residuals)) +
+  stat_qq() +
+  stat_qq_line()
+
+shapiro.test(residuals(finalintermodel))
+```
+**Answer to Q1c** 
+
+The histogram shows a spike directly in the center of the data, and slightly resembles a bell curve. The histogram suggests the data may be normal, but it is unlikely. The QQ plot shares the same conclusion. The plot shows the residuals form an S curve, suggesting that the data is not normal. To tests our assumptions based off these graphs, we conduct a Shaprio-Wilk test. For this test:
+
+$H_0:$ The sample data are significantly normally distributed
+$H_a:$ The sample data are not significantly normally distributed
+
+The p value of the Shapiro-Wilk test is <2.2x10^-16, meaning we reject our null hypothesis in favor of the alternate, and can conclude the data is not significantly normally distributed.
+
+(d) Plot the residuals vs predicted value $\hat{Y}$ plot, do you detect any patterns? Does there appear to be any problem with linearity assumption? 
+
+```{r}
+ggplot(finalintermodel, aes(x=.fitted, y=.resid)) +
+  geom_point() +geom_smooth()+
+  geom_hline(yintercept = 0) 
+```
+**Answer to Q1d** 
+
+The residuals versus predicted (fitted) plot does not appear to have a pattern in the residuals. The residuals tend to lie equally across the horizontal line at 0. With this, we can say there does not appear to be any issue with the linearity assumption.
+
+(e) Do you detect any outliers by using Cook's distance measure (using cooks.distance()>1 ) and  Residual vs Leverage plot?
+
+```{r}
+plot(finalintermodel,which=5)
+waterdata[cooks.distance(finalintermodel)>1.0,]
+plot(finalintermodel,pch=18,col="red",which=c(4)) 
+```
+
+
+**Answer to Q1e**
+
+Our Residual vs Leverage plot did not have any outliers that lay outside of the 1.0 Cook's distance threshold. To confirm this, we printed any values that have a cook distance of greater than 1.0. This returned nothing. We also plotted the data points with the highest Cook's distance, and none of the distances exceeded 1.0, or even 0.5.
+
+Therefore, we do not detect any outliers using a Cook's distance of 1.0.
+
+(f) From part a-e, determine whether your model meets the assumptions of the analysis. If not, provide any suggestions to improve the model.
+
+**Answer to Q1f**
+
+1. Linearity Assumption. By plotting residuals versus fitted we can check if there is a pattern among the residuals. If there is a pattern, we can say our model does not meet the linearity assumption. Since there is no discernible pattern, we can say our model meets the linearity assumption.
+
+2. Independence assumption
+
+3. Equal variance assumption. Our model meets the equal variance assumption because the BP test fails to reject the null hypothesis, and the residuals plot does not contain a funnel shape.
+
+4. Normality Assumption. Our model fails to meet the normality assumption. This is seen by the qqnorm plot having an "S" shape to it, and the Histogram shows a weak normal distribution. In addition, the Shapiro-Wilks rejects the null hypothesis, suggesting the data is not significantly normally distributed. A transformation to meet this assumption would be to use the Box-Cox transformation.
+
+5. Multicolinearity. We checked the Variance Influence Factor of the predictors, and found no correlation strength was greater than 2.
+
+6. Outliers
+
+
+------------------------------------------------------
+
+**Problem 2:** 
+
+__From Assignment 2 Problem 4(c)__, variables CGDUR, MEM and SOCIALSU are consistently selected as the best predictors. 
+
+```{r}
+KBI=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/KBI.csv", header = TRUE)
+model=lm(BURDEN~(CGDUR+ MEM +SOCIALSU) , data=KBI)
+summary(model) 
+```
+
+```{r}
+interactionmodel=lm(BURDEN~(CGDUR+ MEM +SOCIALSU)^2 , data=KBI)
+summary(interactionmodel) 
+```
+
+From the output above, none of interaction terms are significant. Therefore,the final model for prediction is 
+$$
+\widehat{BURDEN}= 115.539 + 0.566MEM - 0.49237SOCIALSU + 0.121CGDUR
+$$
+
+Use the final model above to answer the following questions
+
+(a) Check normality, homoscedasticity, and linearity assumptions. 
+
+```{r}
+#Normality
+hist(residuals(interactionmodel),main="Hist",breaks=20)
+ggplot(KBI, aes(sample=interactionmodel$residuals)) +
+  stat_qq() +
+  stat_qq_line()
+
+shapiro.test(residuals(interactionmodel))
+
+#Homoscedascity
+plot(interactionmodel, which=1)
+plot(interactionmodel, which=3)
+bptest(interactionmodel)
+
+#Linearity
+ggplot(interactionmodel, aes(x=.fitted, y=.resid)) +
+  geom_point() +geom_smooth()+
+  geom_hline(yintercept = 0) 
+```
+
+**Answer to Q2a**
+
+1.Normality
+
+To test for normality we created a histogram to see if the residuals form a normal distribution, which we see is the case. We also checked our qqnorm plot, which has a slight "S" curve which makes us hesitant to claim it is normal. To mathematically check this, we conducted a Shapiro-Wilks test. This test returned a p value of 0.3216, which means we fail to reject the null hypothesis that the data is normal. Therefore, our model meets the normality assumption.
+
+2.Homoscedascity
+
+To test for homoscedascity we plotted our residuals versus fitted, as well as a scale location plot. There was no discernible pattern in the residual vs fitted plot, and the residuals seem to lay horizontally in the scale location plot. These suggest homoscedascity, so we performed a Bresush-Pagan test to confirm this. The p value of this test was 0.3216, meaning we fail to reject the null hypothesis that heteroscedascity is not present. Therefore, our model meets the homoscedascity assumption.
+
+3.Linearity
+
+To test our linearity assumptions we created a plot of our fitted values versus residuals. We did not see a discernible pattern here, meaning that we can say we satisfy the linearity assumption.
+
+(b) Do you detect any outliers by using leverage values greater that $\frac{3p}{n}$? If yes, create a new dataset that removes these outliers.
+
+```{r}
+n=nrow(KBI)
+p=length(coef(interactionmodel))
+lev=hatvalues(interactionmodel)
+plot(rownames(KBI),lev)
+abline(h = 3 *p/n, lty = 1)
+
+
+outlier3p = lev[lev>(3*p/n)]
+print(outlier3p)
+
+#Remove outliers from KBI
+KBI_cleaned <- KBI[-c(39, 63, 71, 100), ]
+```
+
+**Answer to Question 2b**
+We detected 4 outliers that had leverage values greater than $\frac{3p}{n}$. We removed these from the dataset, into the new dataset KBI_cleaned.
+
+((c) Fit the model 
+
+$$
+\widehat{BURDEN}= \hat{\beta_0} + \hat{\beta_1}MEM + \hat{\beta_2}SOCIALSU + \hat{\beta_3}CGDUR
+$$
+
+again using the new dataset created in part (b). Compare the results with the model the final model from __From Assignment 2 Problem 4(c)__ . Do you notice any difference in the results of this model using two different data sets? Compare RSE, significance, and adjusted $R^2$.
+
+```{r}
+Q2model = lm(BURDEN~MEM+SOCIALSU+CGDUR, data=KBI_cleaned)
+summary(Q2model)
+
+A2model = lm(BURDEN~MEM+SOCIALSU+CGDUR, data=KBI)
+summary(A2model)
+```
+
+**Answer to Q2c** 
+
+There are many differences between the models just by removing 4 outliers. The significance of CGDUR has drastically reduced, from 0.0637 to 0.255. The adjusted $R^2$ has increased for the model without the outliers, from 0.4222 to 0.4355. This means the model without the outliers is able to explain more of the variance than the model with the outliers.The RSE has decreased since removing the outliers, from 15.25 to 15.11. This means the model without the outliers has residuals slightly closer together, garnering a better predictive model.
+
+------------------------------------------------------------
+
+**Problem 3:** 
+
+The average butterfat content of milk from dairy cows was recorded for each of five breeds of cattle. Random samples of ten mature (older than 4 years) and ten 2-year olds were taken.
+
+The data are saved in the file named __butterfat.csv__
+
+```{r}
+butterfat <- read.csv("D:/Masters R data/603/butterfat.csv")
+library(MASS)
+```
+
+(a) Plot box-plots using the R command boxplot( ) or ggplot( ) as in DATA 602 for the butterfat against breed, and also against age. Compare the variability/ interquartile range ($Q_3-Q_1$) among breed's levels  and among age's levels
+
+```{r}
+ggplot(butterfat, aes(x = Breed, y = Butterfat)) +
+  geom_boxplot() +
+  labs(title = "Butterfat by Breed", x = "Breed", y = "Butterfat (%)")
+
+ggplot(butterfat, aes(x = Age, y = Butterfat)) +
+  geom_boxplot() +
+  labs(title = "Butterfat by Age", x = "Age", y = "Butterfat (%)")
+
+
+aggregate(Butterfat ~ Breed, data = butterfat, FUN = function(x) IQR(x))
+
+aggregate(Butterfat ~ Age, data = butterfat, FUN = function(x) IQR(x))
+```
+**Answer to Q3a**
+
+The BoxPlot for butterfat against age shows two very similar boxplots between 2 year and Mature. This means that there are not clearly defined differences between data that lies in these two groups.
+
+The BoxPlot for butterfat against breed shows a wider variety of boxplots.Some plots overlap, however there are mostly defined differences between breeds. This suggests that differences exist between different breeds in the data.
+
+(b) Fit a linear model using Age and Breed as independent variables. Would you keep Age in your model?
+
+```{r}
+butter_model = lm(Butterfat~factor(Breed)+factor(Age), data=butterfat)
+summary(butter_model)
+
+butter_model2 = lm(Butterfat~factor(Breed), data=butterfat)
+summary(butter_model2)
+```
+**Answer to Q3b** 
+
+No I would not keep age as a variable, because it is not significant. This means it would not contribute to the model enough to warrant keeping it. Also, the adj R^2 decreased with Age removed, but it was not significant enough of a change to warrant keeping it.
+
+(c) Perform a diagnostics (normality and constant variance assumptions, Normal Q-Q plot) analysis for your model fitted in part (b). What is your conclusion? State all correct hypotheses and p-values for statistical tests.
+
+```{r}
+#Normality
+hist(residuals(butter_model),main="Hist",breaks=20)
+ggplot(butterfat, aes(sample=butter_model$residuals)) +
+  stat_qq() +
+  stat_qq_line()
+
+shapiro.test(residuals(butter_model))
+#Constant varaince
+plot(butter_model, which=1)
+plot(butter_model, which=3)
+bptest(butter_model)
+```
+**Answer to Q3c**
+
+Normality: 
+
+$H_0:$ The sample data are significantly normally distributed
+$H_a:$ The sample data are not significantly normally distributed
+
+The histogram showed an imperfect bell curve, with the most frequency of values settling towards the center. This leans slightly towards normality. The qqplot shows an easily identifiable "S" curve, which strongly suggest there our data is not normal. To confirm this, we used a Shaprio-Wilkes test which produced a p value of 0.007168. This value means we reject our null hypothesis that our data is normal, in favour of the alternate hypothesis that the data is not significantly normally distributed. With this data, we can say that the data in butterfat is not normally distributed.
+
+Constant Variance:
+
+$H_0:$ Heteroscedasticity is not present
+$H_a:$ Heteroscedasticity is present
+
+The scale location and the residual plot are more difficult to interpret because our model only includes categorical variables. With this, we are still able to see a funnel shape in the residuals plot. We see values bunched together near the origin, and begin to widen as the x axis increases. This funnel shape suggests heteroscedascity. To confirm our suspicions, we conducted a Bruesch-Pagan test. Our p value for this test was 0.01154, which is below our alpha of 0.05 meaning we reject our null hypothesis that heteroscedascity is not present. Therefore, we can say our butterfat data does not have equal variance.
+
+
+(d) Fit an appropriate linear regression model by identifying a suitable transformation of your response variable [Box-Cox Transformation]. Compare the results with the model fitted in part c.
+
+```{r}
+BoxCoxTransformation = boxcox(butter_model,lamba=seq(-1,1))
+
+BestLambda = BoxCoxTransformation$x[which(BoxCoxTransformation$y==max(BoxCoxTransformation$y))]
+BestLambda
+
+TransformedModel=lm(log(Butterfat)~Breed,data=butterfat)
+summary(TransformedModel)
+```
+
+**Answer to Question 3d** 
+
+We conducted a BoxCox transformation in order to have our model meet the assumptions. Our best lambda from the transformation was -1.43. After we transformed our model, our adjusted $R^2$ increased from 0.6635 to 0.6922. Our RSE also decreased from 0.4151 to 0.0867. These changes suggest our transformed model has better predictive power. Now we will check the assumptions in the next question.
+
+
+(e) Perform a diagnostics analysis for the model fitted in part (d)
+
+```{r}
+shapiro.test(residuals(TransformedModel))
+bptest(TransformedModel)
+```
+
+**Answer to Q3e**
+
+To check for normality we conducted a Shapiro-Wilkes test, and the following are our hypotheses.
+
+$H_0:$ The sample data are significantly normally distributed
+$H_a:$ The sample data are not significantly normally distributed
+
+The test provided a p-value of 0.1781, which is above our alpha value of 0.05. This means we now fail to reject our null hypothesis, and can the transformed sample data are significantly normally distributed.
+
+To check for equal variance we conducted a Bruesch-Pagan  test, and the following are our hypotheses.
+
+$H_0:$ Heteroscedasticity is not present
+$H_a:$ Heteroscedasticity is present
+
+The test provided a p-value of 0.1276, which is above our alpha value of 0.05. This means we now fail to reject our null hypothesis, and claim in our transformed model heteroscedascity is not present.
+
+------------------------------------------------------------
+
+**Problem 4:** 
+
+Numerous factors contribute to the smooth running of an electric motor (“Increasing Market Share Through Improved Product and Process Design: An Experimental Approach,” Quality Engineering,1991: 361-369). In particular, it is desirable to keep motor noise and vibration to a minimum. To study the effect that the brand of bearing has on motor vibration, five different motor bearing brands were examined by installing each type of bearing on different random samples of six motors. The amount of motor vibration
+(measured in microns) was recorded when each of the 30 motors was running. The data for this study is given in the data file __vibration.csv__
+
+```{r}
+dataQ4 <- read.csv("D:/Masters R data/603/vibration (1).csv")
+library(agricolae)
+```
+
+(a) What are the response variable and an experimental unit? 
+
+**Answer to Question 4a**
+
+The response variable is the variable "vibration" in the dataset. Vibration is is measured as motor vibration, and is measured in microns. This data is recorded when 30 of the motors are running.
+
+
+(b) What is the treatment and how many treatment levels of this experiment? 
+
+**Answer to Question 4b**
+
+The treatment variable is the "brand" variable in the dataset. Brand is the type of bearing installed on the motor.There are 5 different kinds of brands in this dataset.These are labeled Brand 1 through Brand 5.
+
+
+(c) Test and conclude if the average amount of motor vibrations are different at significance level =0.05. Be sure to include your hypothesis and p-value.
+
+```{r}
+vibemodel = lm(vibration~factor(brand), data=dataQ4)
+summary(vibemodel)
+```
+
+**Answer to Question 4c**
+
+
+
+(d) Construct the Anova table for the test.
+
+```{r}
+anova=aov(vibration~brand, data=dataQ4)
+summary(anova)
+```
+| Source of Variation | Df | Sum of Square | Mean Square | F value | Pr(>F)    |
+|---------------------|----|---------------|-------------|---------|-----------|
+| brand               |  4 |        30.86  |       7.714 |   8.444 | 0.000187  |
+| Residuals           | 25 |        22.84  |       0.914 |         |           |
+
+
+(e) Construct the boxplots for all levels. Do you detect any influential outliers?
+
+```{r}
+boxplot(vibration~brand, data=dataQ4)
+```
+**Answer to Q4e**
+
+The boxplots show overlap between different brands. Two Outliers are seen in brand3, and no other brands.
+
+(f) Test all possible pariwise t tests (both Unadjusted and adjusted P-value), Tukey HSD , Newman-Keuls, and Scheffe Test. Compare all outputs and report your results.
+
+```{r}
+#Pairwise
+pairwise.t.test(dataQ4$vibration,dataQ4$brand, p.adj = "none")
+pairwise.t.test(dataQ4$vibration,dataQ4$brand, p.adj = "holm")
+pairwise.t.test(dataQ4$vibration,dataQ4$brand, p.adj = "bonferroni")
+#Scheffe
+scheffe.test(anova,"brand", group=TRUE,console=TRUE)
+#Newman-Keuls
+print(SNK.test(anova,"brand",group=TRUE))
+
+#Tukey
+TukeyHSD(anova, conf.level = 0.95)
+plot(TukeyHSD(anova, conf.level = 0.95),las=1, col = "red")
+```
+
+**Answer to Q4f** Our grouping at alpha = 0.05 is as follows:
+
+Un-adjusted T-Test: This test found groups in: Brand 1,5,3 are all in the same group, while Brand 4 and Brand 2 are in another group.
+
+
+Bonferonni adjusted t-test: This test finds that Brand 1,5,3 are all in the same group while 2 is another group. Brand 4 exists in all groups.
+
+Holm adjusted t-test: This test found Brand 5,1, and 3 are in the same group while 2 is another group. Brand 4 exists in both groups.
+
+Tukey HSD: This test found 1,5,3 to be in the same group adn 2 in a different group. 4 exists in both groups, but creates a group with only 1 and 3 and is NOT in a group with 5.
+
+Newman-Keuls: This test found 1,3,5 to be in the same group. Brand 2 was in its own group, not existing with other Brands. Brand 4 is in a group with only Brands 1 and 3.
+
+Sheffe: This test found Brand 1,5,3 to be in the same group, while Brand 2 is another group. Brand 4 exists in both groups.
+
+
+
+(g) Check all basic assumptions for CRD using plots and hypothesis tests and report your result. If some assumptions are not met, what would you proceed?
+
+```{r}
+#Constant varaince
+bartlett.test(vibration~brand, data = dataQ4) 
+leveneTest(vibration~brand, data = dataQ4)
+bptest(anova)
+
+#Normality assumption
+hist(residuals(vibemodel),main="Hist",breaks=20)
+ggplot(dataQ4, aes(sample=vibemodel$residuals)) +
+  stat_qq() +
+  stat_qq_line()
+
+shapiro.test(residuals(anova))
+```
+
+**Answer to Q4f**
+
+Normality: The histogram of the data does not represent a normal distribution. The normal QQplot shows a pattern that does not lie on the normal line. These two indicate normality is not present in our data, so we conducted a Shapiro-Wilkes test.
+
+The null hypothesis for the Shapiro-Wilkes test is:
+
+$H_0:$ The sample data are significantly normally distributed
+$H_a:$ The sample data are not significantly normally distributed
+
+Our alpha value is 0.05. The shapiro-wilkes resulted in a p-value of 0.3091, meaning we fail to reject our null hypothesis and can clam the sample data is signifcantly normally distributed.
+
+Constant Variance:
+
+The null hypothesis for our BP test, Bartlett test, and Levene Test is:
+
+$H_0:$ Heteroscedasticity is not present
+$H_a:$ Heteroscedasticity is present
+
+Our alpha value is 0.05. The p-value from the BP test is 0.3344, which means we fail to reject the null hypothesis that Heteroscedasticity is not present. The p-value from the Bartlett test is 0.3931, meaning we fail to reject our null hypothesis. The pp-value from the levene test is 0.4898, meaning we also fail to reject our null hypothesis. With this, we can say Heteroscedascity is not present.
+
+-------------------------------------------------------------------
+

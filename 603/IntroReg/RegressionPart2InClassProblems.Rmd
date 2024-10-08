@@ -1,0 +1,225 @@
+
+---
+title: 'Data603: Statistical Modelling with Data'
+output:
+  html_document:
+    df_print: paged
+---
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 18px;
+      line-height: 2em;
+  }
+td {  /* Table  */
+  font-size: 12px;
+}
+.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+ p {line-height: 2em;}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: Teal;
+}
+h3 { /* Header 3 */
+  font-size: 22px;
+  color: Green;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+&copy; Danika Lipman 2023, based on content created by Thuntida Ngamkham
+
+# **MULTIPLE LINEAR REGRESSION PART 2 IN CLASS PROBLEMS**
+
+### **In Class Practice Problem 5**
+
+- For this problem we will be using the data from the **condominium.csv** file.
+   a) Create a model with all interaction terms (based on the best model from last class)
+   b) Conduct an appropriate test to determine if interaction terms should be included in the model.
+
+
+```{r}
+Condominium = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/condominium.csv")
+```
+
+```{r}
+reg <- lm(listprice~floors+livingarea+bedrooms+baths,data=Condominium)
+
+smallReg<-lm(listprice~floors+livingarea+baths, data = Condominium)
+summary(smallReg)
+#0.965 for this model
+```
+
+```{r}
+
+interactReg <- lm(listprice~(livingarea+floors+baths)^2, data=Condominium)
+summary(interactReg)
+```
+
+
+----------------------------------------------------------------------
+
+### **In Class Practice Problem 6**
+
+- Data on last year's sale ($Y$ in 100,000s dollars) in 40 sales districts are given in the **sales.csv** file. This file also contains 
+  + promotional expenditures ($X_1$: in 1,000s dollars), 
+  + the number of active accounts ($X_2$), 
+  + the number of competing brands ($X_3$), and
+  + the district potential ($X_4$,coded) for each of the district
+    + we will ignore this variable for now (do not include in the model) because it is not *quantitative*
+  a) Find the best additive model using some or all of $X_1, X_2, X_3$
+  b) Find the best interactive model using some or all of $X_1, X_2, X_3$
+  c) Which of the two models would you use? 
+  d) How will you interpret the coefficient for $X_3$? (Hint! there should be an interaction)
+
+```{r}
+Sales = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/sales.csv")
+```
+
+```{r}
+full = lm(Y~X1+X2+X3, data=Sales)
+
+reduced = lm(Y~X2+X3, data=Sales)
+
+Model1 = lm(Y~X2+X3+X2*X3, data=Sales)
+summary(Model1)
+
+Model2 = lm(Y~X1+X2+X3+X1*X3+X2*X3, data=Sales)
+summary(Model2)
+```
+
+----------------------------------------------------------------------
+
+
+### **In Class Practice Problem 7**
+
+Suppose that we wish to investigate differences in credit card balance between marital status. Based on the Married variable, we can create a dummy variable which 0 is NO and 1 is YES. 
+
+  a) Create a simple linear regression model to predict the credit card balance by using the Married variable. 
+  b) What are the regression coefficients for this model? 
+  c) How do you interpret the regression coefficients? **Ignore the individual t-test output**
+  
+```{r}
+Credit=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/credit.csv")
+```
+
+```{r}
+simpleLM <- lm(Balance~factor(Married), data=Credit)
+summary(simpleLM)
+```
+
+----------------------------------------------------------------------
+
+### **In Class Practice Problem 8**
+
+- There is often curiosity and controversy surrounding professors’ salaries and whether they are overpaid or not paid enough. A university would like to study the effects of ranks and department on the salaries. 30 observations were randomly chosen from 3 different departments. The data are provided in **salary.csv** data file.
+- Here is a description of the data:
+  + Gender (0 = male, 1 = female)
+  + rank ( 1= Asssistant, 2= Associate, 3 = Full)
+  + dept: Deprtment (1 = Family Studies, 2= Biology, 3 = Business)
+  + year: years since making rank
+  + merit: average merit ranking
+- The variable department has 3 levels which shall be dummy coded into 2 variables.
+  + One called biology
+  + One called business
+- Rank also has 3 levels so we will code it into 2 dummy variables:
+  + Assistant Professor
+  + Full Professor
+- Instead of the rank variable, practice how to interpret the dept variable.
+
+```{r}
+Salary = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/salary.csv")
+```
+
+```{r}
+sLM = lm(salary~factor(dept), data = Salary)
+summary(sLM)
+```
+
+----------------------------------------------------------------------
+
+### **In Class Practice Problem 9**
+
+From the credit card example, use the lm() function to perform the best fit model. Recall the summary of the dataset:
+
+- This Credit data set records:
+  + Balance (average credit card debt for a number of individuals) 
+  + Six quantitative predictors: age, cards (number of credit cards), education (years of education), income (in thousands of dollars), limit (credit limit), and rating (credit rating). 
+  + Four qualitative variables: gender, student (student status), status (marital status), and ethnicity (Caucasian, African American or Asian). 
+  
+a) How would you interpret the regression coefficients (if possible)?
+b) Would you recommend this model for predictive purpose?
+
+
+
+```{r}
+Credit=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/credit.csv")
+```
+
+```{r}
+interlm = lm(Balance~Income+Limit+Age+Cards+Rating+Education+factor(Ethnicity)+factor(Gender)+factor(Student)+factor(Married),data=Credit)
+summary(interlm)
+
+
+test = lm(Balance~(Income+Student+Rating+Age+Limit+Cards), data=Credit)
+summary(test)
+
+best = lm(Balance~Income+Student+Rating+Age+Limit+Cards+Income*Rating+Income*Age+Income*Student+Limit*Rating+Limit*Student, data=Credit)
+summary(best)
+
+Realbest = lm(Balance~Income+Student+Rating+Age+Limit+Cards+Income*Rating+Income*Student+Limit*Rating+Limit*Student, data=Credit)
+summary(Realbest)
+```
+
+```{r}
+student = subset(Credit, Student == 'Yes')
+studentLM = lm()
+
+no = subset(Credit, Student == 'No')
+Realbest = lm(Balance~Income+Student+Rating+Age+Limit+Cards+Income*Rating+Income*Student+Limit*Rating+Limit*Student, data=no)
+summary(Realbest)
+```
+----------------------------------------------------------------------
+
+### **Inclass Practice Problem 10**
+
+Suppose you wanted to model the quality, $y$, of a product as a function of the pressure pounds per square inch (psi), at which it is produced. Four inspectors independently assign a quality score between 0 and 100 to each product, and then the quality, $y$, is calculated by averaging the four scores. An experiment is conducted by varying temperature in F. Fit a higher-order model to the data and sketch the scatterplot. The data are provided in **PRODQUAL.csv** file
+
+```{r}
+ProdQual = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/PRODQUAL.csv")
+```
+
+```{r}
+ggplot(data=ProdQual,mapping= aes(x=PRESSURE,y=QUALITY))+geom_point(color='green4')+ 
+  geom_smooth()
+
+quad = lm(QUALITY~PRESSURE+I(PRESSURE^2), data=ProdQual)
+cube = lm(QUALITY~PRESSURE+I(PRESSURE^2)+I(PRESSURE^3), data=ProdQual)
+quart = lm(QUALITY~PRESSURE+I(PRESSURE^2)+I(PRESSURE^3)+I(PRESSURE^4), data=ProdQual)
+
+```
+
+
+-------------------------------------------------------------------
+
+
+
+
+# References
+_-Gareth James & Daniela Witten & Trevor Hastie Robert Tibshirani, An Introduction to Statistical Learning with Applications in R: Springer New York Heidelberg Dordrecht London._
+
+_-Wickham and Grolemund, R for Data Science: O'Reilly Media_
+
+

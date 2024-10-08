@@ -1,0 +1,168 @@
+
+---
+title: 'Data603: Statistical Modelling with Data'
+output:
+  html_document:
+    df_print: paged
+---
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 18px;
+      line-height: 2em;
+  }
+td {  /* Table  */
+  font-size: 12px;
+}
+.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+ p {line-height: 2em;}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: Teal;
+}
+h3 { /* Header 3 */
+  font-size: 22px;
+  color: Green;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+&copy; Danika Lipman 2023, based on content created by Thuntida Ngamkham
+
+# **MULTIPLE LINEAR REGRESSION PART 1 IN CLASS PROBLEMS**
+
+### **In Class Practice Problem 0**
+
+Pretend a car drove 100 times along a highway and at the end of each trip researchers scraped all the dead insects off the windshield and weighed them (biomass in mg). They predicted that driving time (drivingTime in minutes) would be positively related to biomass. An estimated regression model for this data is:
+$$
+\widehat{Biomass} = 67.76X_{drivingTime}
+$$
+Use the above fitted linear regression and thegiven information to determine which statements are **TRUE**
+
+  a) The biomass of dead insects on the windshield is predicted to increase by 0.0678 g for every minute driven
+  b) The driving time will increase for every 0.0676 g of dead insects accumulated
+  c) The biomass of dead insects is predicted to increase by 67.76 mg for every minute driven
+  d) The biomass of dead insects is predicted to increase by 67776 mg for every minute driven
+
+----------------------------------------------------------------------
+
+
+### **In Class Practice Problem 1**
+
+How do real estate agents decide on the asking price for a newly listed condominium? A computer data base in a small community contains the listed selling price Y (in thousand of dollars), the amount of living area (in hundreds of square metres), and the number of floors, bedrooms, and bathroom are recorded for 15 randomly selected condos currently on the market. The data file is provided in **condominium.csv**.  
+
+```{r}
+Condominium = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/condominium.csv")
+```
+
+a) Use R software package to fit the model
+b) Construct a 95% confidence interval for regression coefficients.
+
+```{r}
+reg <- lm(listprice~floors+livingarea+bedrooms+baths,data=Condominium)
+confint(reg)
+anova(reg)
+
+smallReg<-lm(listprice~floors+livingarea+baths, data = Condominium)
+print(anova(smallReg,reg))
+#0.965 for this model
+
+newdata = data.frame(floors = 2, baths = 2, livingarea=1.5)
+predict(smallReg,newdata,interval="predict",level = .95)
+
+```
+----------------------------------------------------------------------
+
+
+### **In Class Practice Problem 2**
+
+From the condominium problem:
+
+a) Construct the ANOVA table for the model.
+
+
+
+| Source of Variation 	| Degrees of Freedom 	| Sum of Squares 	| Mean Squares 	| F          	|
+|:--------------------:	|:------------------:	|:--------------:	|:------------:	|:----------:	|
+| Regression          	|                   	|               	|             	|           	|
+| Residual            	|                    	|               	|             	|            	|
+| Total               	|                    	|               	|              	|            	|
+
+b) Use the method of Partial F test to fit the model. How many possible fitted models would you suggest for predictive purpose?
+
+
+----------------------------------------------------------------------
+
+### **In Class Practice Problem 3**
+
+From the condominium problem:
+
+a. Use the method of Model Fit to calculate $R^2_{adj}$ and RSE for all models previously fit
+b. Which model or set of models would you suggest for predictive purpose?
+c. Provide the 95% prediction interval of condominium list price for a scenario of interest
+    + Be sure to not extrapolate! So use data that is in the range of data we have.
+
+----------------------------------------------------------------------
+
+### **In Class Practice Problem 4**
+
+Examine some FAKE canola yield data (canola_pg.csv).
+
+- Each row represents a field.
+- The columns are as follows:
+  + canola_bushels_ac – The average yield of canola in that field in bushels/acre
+  + insecticide_lbs_ac – The amount of insecticide applied to that field in lbs/acre
+  + fertilizer_lbs_ac – The amount of fertilizer applied to that field in lbs/acre
+  + summer_heat_units – The total growing degree days the field experienced by harvest
+  + summer_rain_mm – The total precipitation (in mm) measured at each field in a rain gauge
+- Build a model that you can defend. Be prepared to defend it to your group, and explain
+what you found.
+
+```{r}
+Canola = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/canolayield_pg.csv")
+```
+
+```{r}
+reg <- lm(canola_bushels_ac~summer_rain_mm+summer_heat_units+fertilizer_lbs_ac+insecticide_lbs_ac,data=Canola)
+confint(reg)
+anova(reg)
+
+smallReg <- lm(canola_bushels_ac~summer_rain_mm+summer_heat_units+fertilizer_lbs_ac,data=Canola)
+anova(smallReg)
+print(anova(smallReg,reg))
+
+tinyReg <- lm(canola_bushels_ac~summer_rain_mm+summer_heat_units,data=Canola)
+anova(tinyReg)
+summary(tinyReg)
+
+smallReg <- lm(canola_bushels_ac~summer_rain_mm+summer_heat_units+fertilizer_lbs_ac,data=Canola)
+anova(smallReg)
+summary(smallReg)
+
+
+
+newdata = data.frame(floors = 2, baths = 2, livingarea=1.5)
+predict(smallReg,newdata,interval="predict",level = .95)
+
+```
+
+
+
+# References
+_-Gareth James & Daniela Witten & Trevor Hastie Robert Tibshirani, An Introduction to Statistical Learning with Applications in R: Springer New York Heidelberg Dordrecht London._
+
+_-Wickham and Grolemund, R for Data Science: O'Reilly Media_
+
+

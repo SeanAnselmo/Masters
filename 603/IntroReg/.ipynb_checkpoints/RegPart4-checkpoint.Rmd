@@ -1,0 +1,266 @@
+
+---
+title: 'Data603: Statistical Modelling with Data'
+output:
+  html_document:
+    df_print: paged
+---
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 18px;
+      line-height: 2em;
+  }
+td {  /* Table  */
+  font-size: 12px;
+}
+.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+ p {line-height: 2em;}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: Teal;
+}
+h3 { /* Header 3 */
+  font-size: 22px;
+  color: Green;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+&copy; Danika Lipman 2023, based on content created by Thuntida Ngamkham
+
+# **MULTIPLE LINEAR REGRESSION PART 4 IN CLASS PROBLEMS**
+
+```{r}
+library(ggplot2)
+library(lmtest)
+library(mctest)
+library(car)
+library(MASS)
+```
+
+------------------------------------------------------------------
+
+### **Inclass Practice Problem 17**
+
+From the clerical staff work hours, use residual plots to conduct a residual analysis of the data.  Check Linearity Assumption.  If a trend is detected, how would you like to transform the predictors in the model?
+
+- Begin with the model Y ~ X2 + X4 + X5
+
+```{r}
+Clerical=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/CLERICAL.csv")
+```
+
+```{r}
+fullmodel = lm(Y~X2+X4+X5, data=Clerical)
+
+ggplot(fullmodel, aes(x=.fitted, y=.resid)) +
+  geom_point() +geom_smooth()+
+  geom_hline(yintercept = 0) 
+
+ggpairs(Clerical,lower = list(continuous = "smooth_loess", combo =
+  "facethist", discrete = "facetbar", na = "na"))
+
+highmodel = lm(Y~X2+X4+X5+I(X5^2), data=Clerical)
+summary(highmodel)
+
+ggplot(highmodel, aes(x=.fitted, y=.resid)) +
+  geom_point() +geom_smooth()+
+  geom_hline(yintercept = 0) 
+```
+
+------------------------------------------------------------------
+
+### **In Class Problem 18**
+
+From the clerical staff work hours, use residual plots to conduct a residual analysis of the data.  Check Equal Variance Assumption by graphs and the Breusch-Pagan test.  If you detect a trend, how would you like to transform the predictors in the model?
+
+- Begin with the model Y ~ X2 +I(X2^2) + X4 + X5
+
+```{r}
+Clerical=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/CLERICAL.csv")
+```
+
+```{r}
+highmodel = lm(Y~X2+X4+X5+I(X2^2), data=Clerical)
+summary(highmodel)
+
+bptest(highmodel) #p value of 0.152 so it is common variance
+
+ggplot(highmodel, aes(x=.fitted, y=.resid)) +
+  geom_point(colour = "purple") +
+  geom_hline(yintercept = 0) +
+  geom_smooth(colour = "green4")+
+  ggtitle("Residual plot: Residual vs Fitted values")  
+
+#a scale location plot
+ggplot(highmodel, aes(x=.fitted, y=sqrt(abs(.stdresid)))) +
+  geom_point(colour = "purple") +
+  geom_hline(yintercept = 0) +
+  geom_smooth( colour = "green4")+
+   ggtitle("Scale-Location plot : Standardized Residual vs Fitted values") 
+```
+
+
+------------------------------------------------------------------
+
+
+### **In Class Problem 19**
+
+From the clerical staff work hours, use residual plots to conduct a residual analysis of the data.  
+- Check Normality Assumption by graphs and the Shapiro-Wilk normality test. 
+- If you detect a trend, how would you like to transform the predictors in the model?
+- Begin with the model Y ~ X2 +I(X2^2) + X4 + X5
+
+```{r}
+Clerical=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/CLERICAL.csv")
+```
+
+```{r}
+highmodel = lm(Y~X2+X4+X5+I(X2^2), data=Clerical)
+summary(highmodel)
+
+ggplot(Clerical, aes(sample=highmodel$residuals)) +
+  stat_qq() +
+  stat_qq_line()
+
+shapiro.test(residuals(highmodel))
+```
+
+
+------------------------------------------------------------------
+
+
+### **In Class Problem 20**
+
+- From the credit card example, check for Multicollinearity  by scatter plots between independent predictors and VIF test .  
+  + Note! consider only main effect predictors
+  + Use the model BALANCE ~ Income + Rating + Age + Limit + Cards + factor(Student)
+  
+  
+```{r}
+Credit=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/credit.csv")
+
+```
+
+```{r}
+model = lm(Balance~Income + Rating + Age + Limit + Cards + factor(Student), data = Credit)
+vif(model)
+```
+
+
+------------------------------------------------------------------
+
+
+### **In Class Problem 21**
+
+- From the credit card example, after dropping the Limit variable, find the best additive model and check for Multicollinearity by scatter plots between independent predictors and VIF test. 
+  + Note! consider only main effect predictors
+  
+  
+```{r}
+Credit=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/credit.csv")
+```
+
+```{r}
+model = lm(Balance ~ Income + Rating + Age + Cards + factor(Student), data=Credit)
+summary(model)
+
+model2 = lm(Balance ~ Income + Rating + Age + factor(Student), data=Credit)
+summary(model2)
+
+vif(model2)
+```
+------------------------------------------------------------------
+
+
+### **In Class Problem 22**
+
+- From the clerical staff work hours, using residual plots to conduct a residual analysis of the data.  Check any potential outliers.   
+- use the model Y ~ X2 + I(X2^2) + X4 + X5
+  
+  
+```{r}
+Clerical=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/CLERICAL.csv")
+```
+
+```{r}
+model=lm(Y ~ X2 + I(X2^2) + X4 + X5, data =Clerical)
+summary(model)
+
+#Residual vs fit
+ggplot(model, aes(x=.fitted, y=.resid)) +
+  geom_point() +geom_smooth()+
+  geom_hline(yintercept = 0) 
+
+#Rsidual vs leverage
+plot(model, which = 5)
+
+#normal QQ plot
+ggplot(Clreical), aes(sample=model$residuals)) +
+  stat_qq() +
+  stat_qq_line()
+
+#outliers
+lev=hatvalues(model)
+p = length(coef(model))
+n = nrow(Clerical)
+outlier2p = lev[lev>(2*p/n)]
+outlier3p = lev[lev>(3*p/n)]
+print(outlier3p)
+
+
+#Cooks distance
+Clerical[cooks.distance(model)>0.5,] 
+
+#Colinerality says colineraity in 
+vifmodel = lm(Y~X4+X5, data=Clerical)
+vif(vifmodel)
+
+#Scale location
+#a scale location plot
+ggplot(model, aes(x=.fitted, y=sqrt(abs(.stdresid)))) +
+  geom_point(colour = "purple") +
+  geom_hline(yintercept = 0) +
+  geom_smooth( colour = "green4")+
+   ggtitle("Scale-Location plot : Standardized Residual vs Fitted values") 
+```
+
+------------------------------------------------------------------
+
+### **In Class Problem 23**
+
+- Check assumptions for the model below to to predict executive salary (Y)
+
+$$
+Y=\beta_0+\beta_1X_1+\beta_2X_1^2+\beta_3X_2+\beta_4X_3+\beta_5X_4+\beta_6X_5+\beta_7X_3*X_4+\epsilon 
+$$
+  
+  
+```{r}
+ExecSal = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/EXECSAL2.csv")
+```
+
+
+------------------------------------------------------------------
+
+
+
+# References
+_-Gareth James & Daniela Witten & Trevor Hastie Robert Tibshirani, An Introduction to Statistical Learning with Applications in R: Springer New York Heidelberg Dordrecht London._
+
+_-Wickham and Grolemund, R for Data Science: O'Reilly Media_
+
+

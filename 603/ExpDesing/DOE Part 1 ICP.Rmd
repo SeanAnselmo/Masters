@@ -1,0 +1,252 @@
+
+---
+title: 'Data603: Statistical Modelling with Data'
+output:
+  html_document:
+    df_print: paged
+---
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 18px;
+      line-height: 2em;
+  }
+td {  /* Table  */
+  font-size: 12px;
+}
+.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+ p {line-height: 2em;}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: Teal;
+}
+h3 { /* Header 3 */
+  font-size: 22px;
+  color: Green;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+&copy; Danika Lipman 2023, based on content created by Thuntida Ngamkham
+
+# **DOE PART 1 IN CLASS PROBLEMS**
+
+```{r}
+library(agricolae)
+
+```
+
+
+------------------------------------------------------------------
+
+
+### **In Class Problem 24**
+
+Suppose that we wish to inquire how the mean lifetime of a certain manufacturer's AA-cell battery under constant use is affected by the specific device in which it is used. It is well known that batteries of different devices have different mean lifetimes that depend on how the battery is used - constantly, intermittently with certain patterns of usage. The results of battery lifetime testing are necessary to convince a TV network to run an advertisement that claims superiority of one device over another. The testing is traditionally carried out by an independent testing agency, and the data are analyzed by an independent consultant. Suppose that we choose a production run of AA high-current-drain alkaline batteries and put to each of eight test devices; all test devices have the same nominal load impedance. Our dependent variable (yield, response, quality indicator), Y, is lifetime of the battery, measured in hours. Data **lifetime.csv file** from a random sample of 24 responders from each of the 8 brands are provided.
+
+![Sample data for battery lifetime example](/Users/danikalipman/Desktop/Data 603 Fall 2023/ICP24.png)
+
+```{r}
+LifetimeData = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/lifetime.csv")
+
+```
+
+a) Construct a box-plot for the devices
+b) Do you detect any outliers? 
+c) Construct the ANOVA Table 
+d) Conduct the appropriate hypothesis test to determine if there is significant evidence to support there is a difference in the battery lifetime across the different brands.
+
+```{r}
+boxplot(hrs~device, data=LifetimeData, main="Boxplot diagram for the different Levels")
+
+#no outliers
+anova=aov(hrs~device, data=LifetimeData)
+summary(anova)
+```
+
+------------------------------------------------------------------
+
+## **Inclass Practice Problem 25**
+
+From the Merrimack Valley Pediatric Clinic (MVPC), construct a 99% confidence Interval on the average customer satisfaction at Amesbury.
+
+```{r}
+MVPC=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/MVPC.csv", header=TRUE)
+```
+
+```{r}
+CRD=aov(Score~Treatment, data=MVPC) #Perform ANOVA for CRD
+summary(CRD)
+
+ybar=mean(MVPC$Score[MVPC$Treatment == "Amesbury"])
+tcrit=qt(0.005,CRD$df.residual, lower.tail = F) 
+MSE=sum((CRD$residuals)^2/CRD$df.residual)  
+r=length(MVPC$Score[MVPC$Treatment == "Amesbury"])
+#construct a 99% CI
+LowerCI=ybar-tcrit*sqrt(MSE/r)
+UpperCI=ybar+tcrit*sqrt(MSE/r)
+CI=cbind(LowerCI,UpperCI)
+print(CI)
+```
+------------------------------------------------------------------
+
+
+## **Inclass Practice Problem 26**
+
+A state securities laws was wondering  whether five brokers have a difference average on stock price (hundreds dollars). The Data **brokerstudy.csv** from a random sample of 30 observations from each of the 5 brokers are provided. Based on the data, formally test a claim that average prices are the same for all brokers at $\alpha$=0.05. 
+
+```{r}
+Broker = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/brokerstudy.csv")
+```
+
+```{r}
+CRD=aov(price~broker, data=Broker) #Perform ANOVA for CRD
+summary(CRD)
+
+```
+
+------------------------------------------------------------------
+
+
+## **Inclass Practice Problem 27**
+
+From the MVPC experiment, compare the average level of satisfaction among customers in the four locations by using pairwise comparison t test. ( Try all three methods)
+
+```{r}
+MVPC=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/MVPC.csv", header=TRUE)
+```
+
+```{r}
+CRD=aov(Score~Treatment, data=MVPC) #Perform ANOVA for CRD
+summary(CRD)
+
+pairwise.t.test(MVPC$Score,MVPC$Treatment)
+pairwise.t.test(MVPC$Score,MVPC$Treatment, p.adj = "bonferroni")
+
+#6 means so 4 choose 2 tests = 6
+#No difference between Salem and Amesbury
+
+pairwise.t.test(MVPC$Score,MVPC$Treatment, p.adj = "holm")
+```
+
+a) How many pairwise tests do we perform?
+
+b) Which medical clinical location would you like to attend?
+  + Amesbury
+  + Andover
+  + Methuen
+  + Salem
+  
+c) Based on the Bonferroni Adjustment there is no difference between the level of satisfaction among customers in these two locations: 
+
+------------------------------------------------------------------
+
+### **Inclass Practice Problem 28**
+
+From the lifetime of AA battery experiment, compare the average life times for 8 devices by using pairwise comparison t test.
+
+```{r}
+LifetimeData = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/lifetime.csv")
+```
+
+a) How many pairwise tests do we perform?
+
+   
+b) Based on Holm and Bonferroni adjustment, there is difference on the average level of battery life for these devices:
+
+```{r}
+CRD1=aov(hrs~device, data=LifetimeData) #Perform ANOVA for CRD
+summary(CRD1)
+
+#8 choose 2 number of tests
+
+pairwise.t.test(LifetimeData$hrs,LifetimeData$device, p.adj = "bonferroni")
+pairwise.t.test(LifetimeData$hrs,LifetimeData$device, p.adj = "none")
+pairwise.t.test(LifetimeData$hrs,LifetimeData$device, p.adj = "holm")
+```
+
+------------------------------------------------------------------
+
+
+### **Inclass Practice Problem 29**
+
+From the MVPC experiment, compare the average level of satisfaction among customers in the four locations by Tukey's HSD. Compare your results with pair t test.
+
+```{r}
+MVPC=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/MVPC.csv", header=TRUE)
+library(agricolae)
+```
+
+```{r}
+CRD=aov(Score~Treatment, data=MVPC) #Perform ANOVA for CRD
+summary(CRD)
+
+TukeyHSD(CRD, conf.level = 0.95)
+```
+
+----------------------------------------------------------------
+
+
+### **Inclass Practice Problem 30**
+
+From the lifetime of AA battery experiment, compare the average life times for 8 devices by Tukey's HSD. Compare your result with pair t test
+
+```{r}
+LifetimeData = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/lifetime.csv")
+```
+
+```{r}
+CRD=aov(hrs~device, data=LifetimeData) #Perform ANOVA for CRD
+summary(CRD)
+
+TukeyHSD(CRD, conf.level = 0.95)
+```
+----------------------------------------------------------------
+
+
+### **Inclass Practice Problem 31**
+
+From the MVPC experiment, compare the average level of satisfaction among customers in the four locations by Newman-Keuls Test. Compare your result with pair t test and Tukey's HSD.
+
+```{r}
+MVPC=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/MVPC.csv", header=TRUE)
+```
+
+```{r}
+CRD=aov(Score~Treatment, data=MVPC) #Perform ANOVA for CRD
+summary(CRD)
+
+print(SNK.test(CRD,"Treatment",group=TRUE))
+```
+
+
+----------------------------------------------------------------
+
+### **Inclass Practice Problem 32**
+
+From the lifetime of AA battery experiment, compare the average life times for 8 devices by Scheffe Test. Compare your result with pair t test and Tukey's HSD.
+
+
+```{r}
+LifetimeData = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/lifetime.csv")
+```
+
+
+----------------------------------------------------------------
+
+
+
+
+

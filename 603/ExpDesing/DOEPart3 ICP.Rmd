@@ -1,0 +1,169 @@
+
+---
+title: 'Data603: Statistical Modelling with Data'
+output:
+  html_document:
+    df_print: paged
+---
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 18px;
+      line-height: 2em;
+  }
+td {  /* Table  */
+  font-size: 12px;
+}
+.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+ p {line-height: 2em;}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: Teal;
+}
+h3 { /* Header 3 */
+  font-size: 22px;
+  color: Green;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+&copy; Danika Lipman 2023, based on content created by Thuntida Ngamkham
+
+# **DOE PART 3 IN CLASS PROBLEMS**
+
+```{r}
+library(lmtest)
+library(car)
+library(agricolae)
+```
+
+-------------------------------------------------
+
+### **Inclass Practice Problem 35**
+
+A hardness testing machine operates by pressing a tip into a metal test "coupon." The hardness of the coupon can be determined from the depth of the resulting depression. Four tip types are being tested to see if they produce significantly different readings. The coupons might differ slightly in their hardness. Thus coupon is a nuisance factor, which can be treated as a blocking factor. Since coupons are large enough to test four tips on, a RCBD can be used, with one coupon as a block. Four blocks were used. Within each block (coupon) the order in which the four tips were tested was randomly determined. The results (readings on a certain hardness scale)
+are shown in **coupon.csv*** file. Is there a treatment effect? A blocking effect?
+
+```{r}
+coupon = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/coupon.csv")
+```
+
+```{r}
+COUP = lm(hardness~factor(coupon)+factor(tip), data=coupon)
+anova(COUP)
+```
+
+
+
+-------------------------------------------------
+
+### **Inclass Practice Problem 36**
+
+Plant therapists believe that plants can reduce the stress levels of humans. A Kansas State University study was conducted to investigate this phenomenon. Two weeks before final exams, 10 undergraduate students took part in an experiment to determine what effect the presence of an alive plant, a photo of a plant, or absence of a plant has on the student's ability to relax while isolated in a dimly lit room. Each student participated in three sessions-one with a live plant, one with a plant photo, and one with no plant (control). During each session, finger temperature was measured at 1-minute intervals for 20 minutes. Since increasing finger temperature indicates an increased level of relaxation, the maximum temperature (in degrees) was used as the response variable. The data for the experiment, provided in **plants.csv**, were provided. Use the accompanying R printout to make the proper inference. 
+
+```{r}
+plants = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/plants.csv")
+```
+
+a) What is the blocking variable
+b) What is the response variable
+c) What is the experimental unit
+d) What is the treatment and its levels?
+e) Provide the ANOVA table
+f) Test and conclude if there are differences in mean among the treatments
+
+```{r}
+PLANT = lm(temperature~factor(student)+factor(treatment), data=plants)
+anova(PLANT)
+```
+-------------------------------------------------
+
+### **Inclass Practice Problem 37**
+
+A hardness testing machine operates by pressing a tip into a metal test "coupon." The hardness of the coupon can be determined from the depth of the resulting depression. Four tip types are being tested to see if they produce significantly different readings. The coupons might differ slightly in their hardness. Thus coupon is a nuisance factor, which can betreated as a blocking factor. Since coupons are large enough to test four tips on, a RCBD can be used, with one coupon as a block.Four blocks were used. Within each block (coupon) the order in which the four tips were tested was randomly determined. The results (readings on a certain hardness scale)
+are shown in __coupon.csv__ file.
+
+```{r}
+coupon = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/coupon.csv")
+```
+
+a) Use multiple comparisons to test which tips is different from others. Report your result.
+
+
+b) Test all possible assumptions. If some of them are not met, what would you suggest?
+
+```{r}
+COUP = lm(hardness~factor(coupon)+factor(tip), data=coupon)
+anova(COUP)
+
+
+scheffe.test(COUP,"factor(tip)", group=TRUE,console=TRUE)
+
+# checking Assumptions
+plot(COUP,which = 1)
+plot(COUP,which = 2)
+
+
+bartlett.test(hardness~factor(tip),data = coupon)
+leveneTest(hardness~factor(tip),data = coupon)
+shapiro.test(residuals(COUP))
+bptest(COUP)
+```
+
+-------------------------------------------------
+
+### **Inclass Practice Problem 38**
+
+The experiment was intended to see if there is a difference in burst pressure (that is, pressure at which the item bursts) as a function of type of angioplasty unit, for various types of balloon-dilation catheters. The data for this experiment are provided in angioplasty.csv data file.
+
+We wish to test the following hypotheses:
+
+$H_0:$ There are no differential effects among the different angioplasty-unit types with respect to burst pressure. 
+
+$H_1:$ There are differential effects among the different angioplasty-unit types with respect to burst pressure.
+
+```{r}
+angio = read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/angioplasty.csv")
+```
+
+```{r}
+ANG = lm(pressure~factor(balloon)+factor(angioplasty), data = angio)
+anova(ANG)
+
+# checking Assumptions
+plot(ANG,which = 1)
+plot(ANG,which = 2)
+
+
+bartlett.test(pressure~factor(angioplasty),data = angio)
+leveneTest(pressure~factor(angioplasty),data = angio)
+shapiro.test(residuals(ANG))
+bptest(ANG)
+
+print(SNK.test(ANG,"factor(angioplasty)",group=TRUE))
+```
+
+-------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+

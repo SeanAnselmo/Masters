@@ -1,0 +1,273 @@
+---
+title: "Assignment1"
+author: "Sean Anselmo"
+output: html_document
+date: "2024-01-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+```
+
+## Question 1
+
+1. A recent study1 of college graduates in the United states discovered that approximately 60% of degree holders would “change their majors if they could go back to school” and re-do their undergraduate degree. Let’s presume this proportion also holds for Canadian undergraduate university degree holders.
+
+a) at least one of the two would change their undergraduate major (if they had the ability for a re-do).
+
+b) both would not change their undergraduate major.
+
+c)Suppose you are to randomly pick n-Canadians with undergraduate degrees in such a way that the probability of at least one of them would change their undergraduate degree is 0.95. Compute the minimum number of Canadians with undergraduate degrees you would have to randomly select. In other words, compute the sample size n
+. (Hint: ln(ab)=b∗ln(a)…)
+
+```{r Q1}
+#Part A, at least one would change majors
+Q1a = 1-(0.4^2)
+#Part B, both would not change their majors
+Q1b = (0.4)^2
+#Part C, min number of Canadians to randomly select to satisfy at least one changing degrees is 95% chance.
+Q1c = ceiling(log(1-0.95)/log(0.4)) #Round this up, you can't have part of a person
+```
+
+Answer for Part A: **`r Q1a`**
+
+Answer for Part B: **`r Q1b`**
+
+Answer for Part C: **`r Q1c`**
+
+## Question 2
+
+For Question 2, you are asked to create the following simulation: Toss a fair-die 1000 times then compute the sum of the 1000 tosses. For example, S={Toss1,Toss2,⋯,Toss1000}
+. Then ∑[1000(i=1)] Toss(i)= ?
+
+```{r Q2}
+#Step 1
+nsims = 1000  # the number of simulations
+outcome = numeric(nsims) #create empty vector that will be filled with numeric outcomes
+#Step 2
+for(i in 1:nsims){ #we are going to perform the body of the loop 1000 times
+  outcome[i] = sample(c(1,2,3,4,5,6), 1, replace=FALSE) #stores the outcome of the ith toss in position i of outcome
+  }  #close the for-loop
+simresult = data.frame(outcome) #creates a data frame with two columns
+
+#Step 3 visualization
+ggplot(simresult, aes(x=outcome))+
+     geom_histogram(binwidth = 1, fill = 'steelblue', color = 'black', alpha =0.7)+
+     labs(title = "Q2 Histogram", x = "Sum of 1000 Die Tosses", y = "Frequency")+
+     theme_minimal()
+```
+
+## Question 2 Step 3-4
+Yes, this is consistent with my thoughts. There is even chance of each side face appearing, and the simulation shows an even distribution along each possible side face. Some dice faces are seen more than other, which is consistent with random independant events. 
+
+Step 4: In 3000 simulations of rolling three dice at once and summing the dice faces, what is the probability the sum is greater or equal to 14?
+For example, a (5,6,3)
+ outcome sums to 14 and satisfies the condition sum≥14
+ 
+```{r Q2b}
+#Step 4
+nsims = 3000
+outcome = numeric(nsims)
+GE14 = numeric(nsims)
+#Step 4
+for(i in 1:nsims){ #we are going to perform the body of the loop 3000 times
+    tosses = sample(1:6, 3, replace = TRUE)#Toss 3 dices with faces 1:6
+    outcome[i] = sum(tosses) #Sum the rolls
+    GE14[i] = if(outcome[i] >= 14) 1 else 0 #adds all sums that are greater or equal to 15 to GE14
+  }  #close the for-loop
+simresult = data.frame(outcome) #creates a data frame of the dice sums.
+
+#Step 4 visualization
+ggplot(simresult, aes(x=outcome))+
+     geom_histogram(binwidth = 1, fill = 'steelblue', color = 'black', alpha =0.7)+
+     labs(title = "Q2 Part 4 Histogram", x = "Sum of 3000 Die Tosses", y = "Frequency")+
+     theme_minimal()
+
+#Step 4 P(Sum>=14)
+PSumGE14 = sum(GE14)/nsims
+```
+
+Answer to P(Sum>=14) for 3 dice tossed and summed, simulation ran 3000 times.
+**`r PSumGE14`**
+
+## Question 3
+
+ An abbreviated deck of 20 cards consists of four suits (♡,♢,♠,♣) and the following denominations (10, Jack, Queen, King, Ace).You pick at random five cards, or a `hand’, without replacement.
+
+a)Compute the probability your hand will consist of a 10, Jack, Queen, King, and Ace of the same suit. One example of such a hand is: (10♡,J♡,Q♡,K♡,Ace♡)
+
+b)Compute the probability that you get a three-of-a-kind. For example, (10♡, 10♢, 10♠, J♣, K♡).
+
+c)Compute probability that one observes two Aces and two ♠’s.
+
+```{r Q3}
+TotalPossibilities = choose(20,5) #choosing 5 cards out of a deck of 20
+Q3a = 4*1/TotalPossibilities #4 is the number of suits and 1 is the number of ways we can draw every card of that suit
+
+ThreeOfaKind = choose(5,1)*choose(4,3) #Choose the card number multiplied by choosing 3 suits out of 4
+RemainingTwoCards = choose(16,2) #Choose last two cards from remaining cards
+Q3b = (RemainingTwoCards*ThreeOfaKind)/TotalPossibilities
+
+BothAcesAreSpades <- choose(3, 2)*choose(4, 2)*choose(12, 1) #Two Aces that are Spades. 
+#3 choose 2 ways to choose ace that is not a spade as well.
+#4 choose 2 ways to pick two spades that are not an Ace
+#12 choose 1 way to pick a card that is not an ace
+OneAceIsSpade <- choose(1, 1)*choose(3, 1)*choose(4,1)*choose(12, 1)
+Q3c = (OneAceIsSpade+BothAcesAreSpades)/TotalPossibilities
+```
+
+Answer for Part A: **`r Q3a`**
+
+Answer for Part B: **`r Q3b`**
+
+Answer for Part C: **`r Q3c`**
+
+## Question 4
+An oil and gas executive needs to fly from Calgary, Alberta (airport code YYC) to Washington-Dulles (airport code IAD) to attend a meeting with lobbyists about the building of a certain pipeline. Because there is no direct flight from YYC to IAD, this traveller has fly from YYC to a different city, then connect with a flight to IAD. The traveler has airline options. Airline AA will connect through Dallas, Airline UA will connect through Chicago, or Airline D which connects through Minneapolis-St.Paul. Taking into their past experiences with flying with the three airlines in question, this executive hints that the probability of flying with Airline AA is 0.15. The probability they will fly with Airline D is three times more than the probability of flying with Airline UA. Historical data has shown that 15% of passengers who fly with Airline AA miss their connecting flights in Dallas. Similarly, 10% of Airline D passengers and 30% of Airline UA passengers miss their connecting flights.
+
+The executive has called the office of the lobby-group to say they have missed their connecting flight. Compute the probability that the executive called from Chicago (or is flying Airline UA).
+
+```{r Q4}
+AirlineAAProb = 0.15
+AirlineUAProb = 0.2125 #Algebra, 1 = 0.15+3x+x solve for x
+AirlineDProb = 3*AirlineUAProb
+
+AirlineAAMiss = 0.15
+AirlineUAMiss = 0.30
+AirlineDMiss = 0.1
+
+ChancesToMiss = (AirlineAAMiss*AirlineAAProb)+(AirlineDMiss*AirlineDProb)+(AirlineUAMiss*AirlineUAProb) #All situations where the flight is missed
+Q4 = AirlineUAProb*AirlineUAMiss/ChancesToMiss #UA is missed divided by chances to miss. 
+```
+Answer:  **`r Q4`**
+
+## Question 5
+ A random variable X has the following probability distribution function
+          P(X=x)=2/3^(x+1)    x=0,1,2,⋯
+
+a)Using R Studio, create a display that shows the probability distribution of this particular random variable X. Refer to the various code provided for examples appearing in both Probability Module 4 and Review Exercise 5 from Thursday, September 8th. For values of x, use xvalues = 0:15.
+
+b) How likely is it to observe values beyond 4? Compute P(X>4).
+c)Compute the mean or expected value of X, E(X)or μX. (Hint: In computing E(X), change the upper limit on xvalues from 15 to 100…)
+d)Compute the standard deviation of X, SD(X) or σX. (use the same values of x as you did in part (c))
+e)Consider the interval (μX−σX,μX+σX). Compute P(μX−σX <X< μX+σX). 
+
+```{r Q5}
+PX = function(x) { #Function described in the question
+  2/(3^(x + 1))
+}
+x = 0:15
+xProbabilites = PX(x)
+Q5b = sum(xProbabilites[x>4])
+
+EVpx = function(x) { #Function times x to find expected value
+  x*(2/(3^(x + 1)))
+}
+x = 0:100
+Q5c = sum(EVpx(x))
+
+m2 = function(x) { #Function times x squared to find variance
+  (x^2)*(2/(3^(x + 1)))
+}
+variance = sum(m2(x))
+Q5d = sqrt(variance-Q5c^2)
+
+x = 0:100
+lower_bound = Q5c-Q5d
+upper_bound = Q5c+Q5d
+Q5e =  sum(xProbabilites[(x > Q5c - Q5d) & (x < Q5c + Q5d)])
+```
+Answer for Part A:
+```{r Q5a}
+x = 0:15
+plot(x, xProbabilites, xlab="Values of X",ylab = "Density of f(x)", main = "Distribution of X", col = 'red')
+```
+
+Answer for Part B: **`r Q5b`**
+
+Answer for Part C: **`r Q5c`**
+
+Answer for Part D: **`r Q5d`**
+
+Answer for Part E: **`r Q5e`**
+
+## Question 6
+
+a) Create a bar graph that demonstrates the distribution of race within each level of education. What can you infer from this bar graph?
+b) Create a data visualization that can be used to demonstrate if there is a relationship between one’s marital status (Marital) and their education level.
+c)Create a data visualization that can be used to demonstrate if there is a relationship between one’s Gender and their Politics.
+```{r Q6}
+gss = read.csv("https://raw.githubusercontent.com/Statman44/Data602/main/GSS2002.csv")
+
+#Part A
+ggplot(gss, aes(x=Education, fill = Race))+
+  geom_bar(position="dodge", na.rm=TRUE)+
+  labs(title="Question 6 Part A", x="Education Level", y="Count")+
+  theme_minimal()
+
+#Part B
+ggplot(gss, aes(x=Marital, fill = Education))+
+  geom_bar(position="dodge", na.rm=TRUE)+
+  labs(title="Question 6 Part B", x="Marital Status", y="Count")+
+  theme_minimal()
+
+#Part C
+ggplot(gss, aes(x=Gender, fill = Politics))+
+  geom_bar(position="dodge", na.rm=TRUE)+
+  labs(title="Question 6 Part C", x="Gender", y="Count")+
+  theme_minimal()
+
+```
+
+Answer for Part A: In every level of education listed, white people have higher counts than other races. They also have higher counts of leaving High School than other races. I infer this is because the raw counts of white people are higher than other races. 
+
+## Question 7
+
+7. Refer to the Default data set in the ISLR package. This data set consists of 10000 cases. There are four different variables in this data set. “default” is a categorical variable that indicates if a person has defaulted on their credit card debt (Yes) or has not (No); the variable “student” flags a respondent as a student (Yes) or not (No); the third variable is the person’s credit card balancing they are carrying, and the last variable “income” is the person’s annual income.
+
+a)Create a scatterplot that demonstrates the relationship between a person’s income and their monthly balance they carry on their credit cards. Place the “income” variable as the y-axis and the “balance” variable as the x-axis. Within this visualization, differentiate between those who are students and those who are not.
+
+b)Create side-by-side boxplots that will compare the distributions of balance owing between students and non-students.
+
+c)Compute the means, medians, standard deviations, x5, x95 (the 5th and 95th percentiles, respectively) for the data you visually summarized in part (b).
+
+```{r Q7}
+library(ISLR)
+head(Default, 4)
+
+#Part a
+ggplot(Default, aes(x =balance, y = income, color = student))+
+  geom_point(alpha = 0.7)+
+  labs(title = "Question 7 Scatter Plot", x = "Balance", y ="Income")+
+  theme_minimal()
+
+#Part b
+ggplot(Default, aes(x =student, y = balance, fill = student))+
+  geom_boxplot()+
+  labs(title = "Question 7 Scatter Plot", x = "Balance", y ="Income", fill = "Student")+
+  theme_minimal()
+
+#Part c
+#Student Stats
+calc_stats <- function(data) {
+  mean_val <- mean(data, na.rm = TRUE)
+  median_val <- median(data, na.rm = TRUE)
+  sd_val <- sd(data, na.rm = TRUE)
+  x5_val <- quantile(data, 0.05, na.rm = TRUE)
+  x95_val <- quantile(data, 0.95, na.rm = TRUE)
+  
+  return(c(Mean = mean_val, Median = median_val, StandardDeviation = sd_val, x5 = x5_val, x95 = x95_val))
+}
+
+StudentStats <- calc_stats(Default$balance[Default$student == "Yes"])
+NonStudentStats <- calc_stats(Default$balance[Default$student == "No"])
+stats_df <- data.frame(rbind(Student = StudentStats, NonStudent = NonStudentStats))
+
+Table <- kable(stats_df, format = "html") %>% kable_styling()
+```
+
+Answer for Part C: `r Table `
+
+

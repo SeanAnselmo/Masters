@@ -1,0 +1,52 @@
+---
+title: "BarryBondsData"
+author: "Sean Anselmo"
+date: "2024-02-12"
+output: pdf_document
+---
+
+```{r Q1}
+library(readr)
+library(ggplot2)
+bondsdata <- read.csv("~/602/Project/bondsdata.csv")
+bondsdata <- bondsdata[bondsdata$season!=2001, ]
+
+bondsmodel <- lm(hrat~season,data=bondsdata)
+slope <- summary(bondsmodel)$slope
+
+residuals <- residuals(bondsmodel)
+
+plot(bondsmodel$fitted.values, residuals, xlab="Residual", ylab="Residuals",
+main="Q4e Homoscedasticity Visualization", pch=19)
+abline(h=0, col="blue", lty=2)
+
+qqnorm(residuals)
+qqline(residuals) 
+
+#Talk about the t values and what they mean
+
+#predicted value
+predict_2001 = -7.9924993+0.0040442*2001
+
+df <- df.residual(model)
+
+# Significance level (alpha)
+alpha <- 0.05
+
+# Critical value from t-distribution
+t_value <- qt(1 - alpha / 2, df = df)
+
+# Standard error of the regression
+std_error_regression <- summary(model)$sigma
+
+# Compute upper and lower bounds of prediction interval
+upper_bound <- predicted_value_2001 + t_value * std_error_regression
+lower_bound <- predicted_value_2001 - t_value * std_error_regression
+
+# Display upper and lower bounds
+cat("Upper bound of prediction interval:", upper_bound, "\n")
+cat("Lower bound of prediction interval:", lower_bound, "\n")
+
+
+```
+

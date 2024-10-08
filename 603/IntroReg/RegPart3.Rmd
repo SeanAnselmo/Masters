@@ -1,0 +1,227 @@
+
+---
+title: 'Data603: Statistical Modelling with Data'
+output:
+  html_document:
+    df_print: paged
+---
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 18px;
+      line-height: 2em;
+  }
+td {  /* Table  */
+  font-size: 12px;
+}
+.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+ p {line-height: 2em;}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: Teal;
+}
+h3 { /* Header 3 */
+  font-size: 22px;
+  color: Green;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+&copy; Danika Lipman 2023, based on content created by Thuntida Ngamkham
+
+# **MULTIPLE LINEAR REGRESSION PART 3 IN CLASS PROBLEMS**
+
+```{r,echo=FALSE}
+library(olsrr)
+```
+
+###  **In Class Problem 11**
+
+- From the credit example in MLR Modelling Part 2:
+  a) Use the Stepwise Regression Procedure to find the potentially important independent variables for predicting credit card balance.
+  b) Build a model based on results from part a) where the important variables have two-way interactions.
+  c) Use the Stepwise Regression Procedure to find a final model based on this interaction model in which all predictors contribute.
+
+
+```{r}
+Credit=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/credit.csv")
+
+full = lm(Balance~Income+Limit+Rating+Age+Cards+Education+factor(Gender)+factor(Student)+factor(Ethnicity)+factor(Married), data=Credit)
+
+stepmod=ols_step_both_p(full,pent = 0.1, prem = 0.3, details=TRUE)
+
+twoway = lm(Balance~(Income+Rating+Student+Limit+Cards+Age)^2, data=Credit)
+stepmod=ols_step_both_p(twoway,pent = 0.1, prem = 0.3, details=TRUE)
+```
+
+
+-----------------------------------------------------------------------------------
+
+
+###  **In Class Problem 12**
+
+- From the credit example in MLR Modelling Part 2:
+  a) Use the Backward Elimination Regression Procedure to find the potentially important independent variables for predicting credit card balance.
+  b) Is it different than our additive stepwise selection model? 
+
+
+```{r}
+Credit=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/credit.csv")
+```
+
+```{r}
+fullmodel = lm(Balance~Income+Limit+Rating+Age+Cards+Education+Gender+Student+Ethnicity+Married, data=Credit)
+
+ExecSalBack=ols_step_backward_p(fullmodel, p_val = 0.05, details=TRUE)
+summary(ExecSalBack$model)
+
+ExecSalBack=ols_step_backward_p(fullmodel, p_val = 0.3, details=TRUE)
+summary(ExecSalBack$model)
+
+```
+
+-----------------------------------------------------------------------------------
+
+
+###  **In Class Problem 13**
+
+- From the credit example in MLR Modelling Part 2:
+  a) Use the Forward Selection Regression Procedure to find the potentially important independent variables for predicting credit card balance.
+  b) Is it different than our previous model? 
+
+
+```{r}
+Credit=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/credit.csv")
+```
+
+```{r}
+fullmodel = lm(Balance~Income+Limit+Rating+Age+Cards+Education+Gender+Student+Ethnicity+Married, data=Credit)
+
+ExecSalFor=ols_step_forward_p(fullmodel,p_val = 0.3, details=FALSE)
+summary(ExecSalFor$model)
+
+ExecSalFor2=ols_step_forward_p(fullmodel,p_val = 0.05, details=FALSE)
+summary(ExecSalFor2$model)
+```
+
+-----------------------------------------------------------------------------------
+
+
+###  **In Class Problem 14**
+
+- From the credit card example, using **All Possible Regressions Selection Procedure** to analyse which independent predictors should be used in the model.
+  + This means use the *leaps* packages regsubsets() function
+
+
+```{r}
+Credit=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/credit.csv")
+library(leaps)
+```
+
+```{r}
+best.subsetExecSal=regsubsets(Balance~Income+Limit+Rating+Age+Cards+Education+Gender+Student+Ethnicity+Married, data=Credit)
+summary(best.subsetExecSal)
+
+reg.summary=summary(best.subsetExecSal)
+rsquare=c(reg.summary$rsq)
+cp=c(reg.summary$cp)
+AdjustedR=c(reg.summary$adjr2)
+RSS=c(reg.summary$rss)
+BIC=c(reg.summary$bic)
+cbind(rsquare,cp,BIC,RSS,AdjustedR)
+```
+
+-----------------------------------------------------------------------------------
+
+
+###  **In Class Problem 15**
+
+- From the credit card example, investigate the scatter plots for all pairwise combinations between variables, find the best fitted model to predict balance. You may include interaction terms and higher order terms to improve the model.
+
+```{r}
+Credit=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/credit.csv")
+```
+
+```{r}
+firstorderExec=lm(Balance~Rating+Income+Limit+Age+Student+Cards,data=Credit)
+summary(firstorderExec)
+
+firstorderExecSmall=lm(Balance~Rating+Income+Limit+Age,data=Credit)
+summary(firstorderExecSmall)
+
+firstorderExecInteractive=lm(Balance~(Rating+Income+Limit+Age+Student+Cards)^2,data=Credit)
+summary(firstorderExecInteractive)
+
+firstorderExecSelected=lm(Balance~Rating+Income+Limit+Age+Student+Limit*Student+Income*Student+Rating*Limit+Rating*Income,data=Credit)
+summary(firstorderExecSelected)
+
+
+firstorderExecHigh=lm(Balance~Rating+Income+Limit+I(Age^2)+Student+Limit*Student+Income*Student+Rating*Limit+Rating*Income,data=Credit)
+summary(firstorderExecHigh)
+```
+
+-----------------------------------------------------------------------------------
+
+
+###  **In Class Problem 16**
+
+- Clerical staff work hours. In any production process in which one or more workers are engaged in a variety of tasks, the total time spent in production varies as a function of the size of the work pool and the level of output of the various activities. 
+ - For example, in a large metropolitan department store, the number of hours worked (Y) per day by the clerical staff may depend on the following variables: 
+  + $X_1$ = Number of pieces of mail processed (open, sort, etc.)
+  + $X_2$ = Number of money orders and gift certificates sold,
+  + $X_3$ = Number of window payments (customer charge accounts) transacted ,
+  + $X_4$ = Number of change order transactions processed ,
+  + $X_5$ = Number of checks cashed ,
+  + $X_6$ =Number of pieces of miscellaneous mail processed on an ''as available'' basis , and
+  + $X_7$ =Number of bus tickets sold 
+- The data are provided in **CLERICAL.csv** file count for these activities on each of 52 working days. Conduct a Stepwise Regression Procedure and All-Possible-Regressions procedure of the data using R software package. 
+- Create a model with your table that you stand behind. You may want to add interactions or higher order terms. 
+
+```{r}
+Clerical=read.csv("https://raw.githubusercontent.com/DanikaLipman/DATA603/main/CLERICAL.csv")
+```
+
+```{r}
+fullmodel = lm(Y~X1+X2+X3+X4+X5+X6+X7, data=Clerical)
+summary(fullmodel)
+
+addmodel = lm(Y~X2+X4+X5, data=Clerical)
+summary(addmodel)
+
+intmodel = lm(Y~(X2+X4+X5)^2, data=Clerical)
+summary(intmodel)
+
+
+intmodel = lm(Y~(X2+X4+X5+X6+X2:X6), data=Clerical)
+summary(intmodel)
+
+ggpairs(addmodel)
+
+highmodel = lm(Y~X2+X4+I(X2^2)+X5, data=Clerical)
+summary(highmodel)
+```
+
+----------------------------------------------------------------------------------
+
+
+
+
+
+# References
+_-Gareth James & Daniela Witten & Trevor Hastie Robert Tibshirani, An Introduction to Statistical Learning with Applications in R: Springer New York Heidelberg Dordrecht London._
+
+_-Wickham and Grolemund, R for Data Science: O'Reilly Media_
+
+

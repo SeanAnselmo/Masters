@@ -1,0 +1,90 @@
+---
+title: "FinalProject"
+author: "Sean Anselmo"
+date: "2024-04-03"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(readr)
+library(olsrr)
+library(ggplot2)
+library(lmtest)
+library(car)
+library(GGally)
+data <- read_csv("~/603/Project/updated_hfa_data_decades.csv")
+```
+
+## R Markdown
+
+
+```{r}
+model = lm(VALUE_HFA_43~VALUE_HFA_33+VALUE_HFA_36+VALUE_HFA_39+VALUE_HFA_426, data=data)
+summary(model)
+
+modelAdd = lm(VALUE_HFA_43~VALUE_HFA_33+VALUE_HFA_36+VALUE_HFA_39+DECADE, data=data)
+summary(modelAdd)
+
+StepWise=ols_step_both_p(model,p_enter = 0.1, p_remove = 0.3, details=TRUE) #Stepwise has same results
+StepWise=ols_step_backward_p(model,p_enter = 0.1, p_remove = 0.3, details=TRUE)
+StepWise=ols_step_forward_p(model,p_enter = 0.1, p_remove = 0.3, details=TRUE)
+
+modelBackwards = lm(VALUE_HFA_43~(VALUE_HFA_39+VALUE_HFA_33+VALUE_HFA_36)^2, data=data)
+summary(modelBackwards)
+
+interactive_modelBackwards = lm(VALUE_HFA_43~DECADE+I(DECADE^2)+VALUE_HFA_39+VALUE_HFA_33+VALUE_HFA_36+VALUE_HFA_33*VALUE_HFA_36, data=data)
+summary(interactive_modelBackwards)
+
+
+residuals2 <- resid(interactive_modelBackwards)
+
+#Our data is normal
+qqnorm(residuals2)
+qqline(residuals2, col = "red")
+shapiro.test(residuals(interactive_modelBackwards))
+
+#Check for homoscedasity, we have equal variance
+bptest(interactive_modelBackwards)
+
+#Check for colinearity 
+vif(modelAdd)
+
+#We have 5 data points that rest farther outside than the rest.
+plot(interactive_modelBackwards,pch=18,col="red",which=c(4)) 
+```
+```{r}
+#Multicolinearity plot
+#Remove country so ggpairs can work properly
+dataRemoved <- subset(data, select = -COUNTRY_REGION)
+
+ggpairs(dataRemoved, upper = list(continuous = wrap("cor", size = 4)), 
+        diag = list(continuous = "barDiag"))
+```
+
+## Including Plots
+
+
+```{r, echo=FALSE}
+pairs(VALUE_HFA_43~VALUE_HFA_39+VALUE_HFA_33+VALUE_HFA_36+VALUE_HFA_33*VALUE_HFA_39+VALUE_HFA_33*VALUE_HFA_36+I(VALUE_HFA_33^2), data=data,panel=panel.smooth)
+
+pairs(VALUE_HFA_43~VALUE_HFA_39+VALUE_HFA_33+VALUE_HFA_36+VALUE_HFA_33*VALUE_HFA_39+VALUE_HFA_33*VALUE_HFA_36+I(VALUE_HFA_33^2), data=data)
+
+
+interactive_modelBackwards = lm(VALUE_HFA_43~VALUE_HFA_39+VALUE_HFA_33+VALUE_HFA_36+VALUE_HFA_33*VALUE_HFA_39+VALUE_HFA_33*VALUE_HFA_36+I(VALUE_HFA_33^2), data=data)
+summary(interactive_modelBackwards)
+```
+```{r}
+ggplot(interactive_modelBackwards, aes(x=.fitted, y=sqrt(abs(.stdresid)))) +
+  geom_point(colour = "purple") +
+  geom_hline(yintercept = 0) +
+  geom_smooth( colour = "green4")+
+   ggtitle("Scale-Location plot : Standardized Residual vs Fitted values") 
+
+plot(interactive_modelBackwards, which=1) #residuals plot
+plot(interactive_modelBackwards, which=3) #a scale location plot
+hist(residuals(interactive_modelBackwards),main="Hist",breaks=20)
+
+pairs()
+```
+
+
